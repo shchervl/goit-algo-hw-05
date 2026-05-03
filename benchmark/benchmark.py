@@ -16,11 +16,23 @@ REPEATS = 1000
 
 
 def load_texts(patterns: dict) -> dict[str, str]:
-    return {
-        f.name: f.read_text(encoding="utf-8")
-        for f in sorted(DATA_DIR.glob("*.txt"))
-        if f.name in patterns
-    }
+    found = {f.name for f in DATA_DIR.glob("*.txt")}
+    texts = {}
+    for filename in sorted(patterns):
+        if filename not in found:
+            print(f"WARNING: '{filename}' listed in patterns.json but not found in data/")
+            continue
+        path = DATA_DIR / filename
+        try:
+            content = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            print(f"WARNING: '{filename}' is not a valid text file, skipping")
+            continue
+        if not content.strip():
+            print(f"WARNING: '{filename}' is empty, skipping")
+            continue
+        texts[filename] = content
+    return texts
 
 
 def load_patterns() -> dict:
